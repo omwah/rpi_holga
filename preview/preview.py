@@ -2,7 +2,7 @@ import os
 import dircache
 
 from flask import Flask, url_for, render_template, send_file
-from PIL import Image
+from PIL import Image, ImageOps
 
 def configure_app(app):
     app.config.from_object('config.Config')
@@ -49,15 +49,19 @@ def original(filename):
     orig_filename = os.path.join(app.config['IMAGES_ORIGINAL_DIR'], filename)
     return send_file(orig_filename)
 
-def resize_image(orig_filename, new_filename, size):
+def resize_image(orig_filename, new_filename, size, fit=False):
     if os.path.realpath(orig_filename) == os.path.realpath(new_filename):
         raise IOException('Original and resized filename can not be the same: %s' % orig_filename)
 
     if not os.path.exists(new_filename):
         print "Creating ->", new_filename
         im = Image.open(orig_filename)
-        im.thumbnail(size, Image.ANTIALIAS)
-        im.save(new_filename)
+        if fit:
+            thumb = ImageOps.fit(im, size, Image.ANTIALIAS)
+            thumb.save(new_filename)
+        else:
+            im.thumbnail(size, Image.ANTIALIAS)
+            im.save(new_filename)
         return True
 
     return False
@@ -73,7 +77,7 @@ def preview(filename):
 def thumbnail(filename):
     orig_filename = os.path.join(app.config['IMAGES_ORIGINAL_DIR'], filename)
     img_filename = os.path.join(app.config['IMAGES_THUMBNAIL_DIR'], filename)
-    resize_image(orig_filename, img_filename, app.config['IMAGES_THUMBNAIL_SIZE'])
+    resize_image(orig_filename, img_filename, app.config['IMAGES_THUMBNAIL_SIZE'], fit=True)
     return send_file(img_filename)
 
 if __name__ == "__main__":
