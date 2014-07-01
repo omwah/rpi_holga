@@ -8,7 +8,7 @@ def configure_app(app):
     app.config.from_object('config.Config')
 
 def make_image_dirs(app):
-    for img_dir in ('IMAGES_ORIGINAL_DIR', 'IMAGES_PREVIEW_DIR', 'IMAGES_THUMBNAIL_DIR'):
+    for img_dir in ('IMAGES_ORIGINAL_DIR', 'IMAGES_THUMBNAIL_DIR'):
         if not os.path.exists(app.config[img_dir]):
             os.makedirs(app.config[img_dir])
 
@@ -26,10 +26,6 @@ class CameraPicture(object):
     @property
     def original(self):
         return url_for('original', filename=self.basename)
-
-    @property
-    def preview(self):
-        return url_for('preview', filename=self.basename)
 
     @property
     def thumbnail(self):
@@ -65,13 +61,6 @@ def resize_image(orig_filename, new_filename, size, fit=False):
         return True
 
     return False
-
-@app.route('/preview/<filename>')
-def preview(filename):
-    orig_filename = os.path.join(app.config['IMAGES_ORIGINAL_DIR'], filename)
-    img_filename = os.path.join(app.config['IMAGES_PREVIEW_DIR'], filename)
-    resize_image(orig_filename, img_filename, app.config['IMAGES_PREVIEW_SIZE'])
-    return send_file(img_filename)
 
 @app.route('/thumbnail/<filename>')
 def thumbnail(filename):
