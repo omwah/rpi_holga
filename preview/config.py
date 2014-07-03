@@ -1,6 +1,6 @@
 import os
 
-PICTURES_BASE_DIR = '/home/mcduffie/Temp/pictures_test'
+PICTURES_BASE_DIR = '/home/pi/pictures'
 
 class Config(object):
     DEBUG = True
