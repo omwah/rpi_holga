@@ -1,5 +1,6 @@
 import os
 import dircache
+from collections import namedtuple
 
 from flask import Flask, url_for, render_template, send_file
 from PIL import Image, ImageOps
@@ -29,7 +30,11 @@ class CameraPicture(object):
 
     @property
     def thumbnail(self):
-        return url_for('thumbnail', filename=self.basename)
+        TnInfo = namedtuple('TnInfo', ['src', 'width', 'height'])
+        src = url_for('thumbnail', filename=self.basename)
+        width = app.config['IMAGES_THUMBNAIL_SIZE'][0]
+        height = app.config['IMAGES_THUMBNAIL_SIZE'][1]
+        return TnInfo(src, width, height)
 
 @app.route('/')
 def index():

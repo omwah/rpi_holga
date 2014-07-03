@@ -25,8 +25,7 @@
     <div id="links">
         {% for pic in pictures %}
             <a href="{{ pic.original }}" title="{{ pic.title }}" data-gallery>
-                <img src="{{ pic.thumbnail }}" alt="{{ pic.title }}">
-            </a>
+                <img class="lazy" data-original="{{ pic.thumbnail.src }}" alt="{{ pic.title }}" width="{{ pic.thumbnail.width }}" height="{{ pic.thumbnail.height }}"></a>
         {% endfor %}
     </div>
 
@@ -34,6 +33,13 @@
     <script src="{{ url_for('static', filename='js/jquery-2.1.1.min.js') }}"></script>
     <! -- blueimp Gallery -->
     <script src="{{ url_for('static', filename='js/jquery.blueimp-gallery.min.js') }}"></script>
+    <! -- Lazy Load for image loading -->
+    <script src="{{ url_for('static', filename='js/jquery.lazyload.min.js') }}"></script>
+    <script>
+        $(function() {
+            $("img.lazy").lazyload();
+        });
+    </script>
 
     </body>
 </html>
