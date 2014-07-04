@@ -1,0 +1,9 @@
+/* RPi Holga Preview Overrides */
+
+/* Use better padding for gallery images */
+div.img-box {
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}

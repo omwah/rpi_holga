@@ -1,6 +1,9 @@
 import os
+import sys
 import dircache
+import logging
 from collections import namedtuple
+from optparse import OptionParser
 
 from flask import Flask, url_for, render_template, send_file
 from PIL import Image, ImageOps
@@ -36,10 +39,14 @@ class CameraPicture(object):
         height = app.config['IMAGES_THUMBNAIL_SIZE'][1]
         return TnInfo(src, width, height)
 
+def image_filenames():
+    img_fns = sorted(dircache.listdir(app.config['IMAGES_ORIGINAL_DIR']), reverse=True)
+    return img_fns
+
 @app.route('/')
 def index():
     pictures = []
-    for filename in dircache.listdir(app.config['IMAGES_ORIGINAL_DIR']):
+    for filename in image_filenames():
         img_filename = os.path.join(app.config['IMAGES_ORIGINAL_DIR'], filename)
         if os.path.isfile(img_filename):
             pictures.append(CameraPicture(img_filename))
@@ -55,7 +62,7 @@ def resize_image(orig_filename, new_filename, size, fit=False):
         raise IOException('Original and resized filename can not be the same: %s' % orig_filename)
 
     if not os.path.exists(new_filename):
-        print "Creating ->", new_filename
+        logging.debug("Generating (%s) image for %s" % (size, orig_filename))
         im = Image.open(orig_filename)
         if fit:
             thumb = ImageOps.fit(im, size, Image.ANTIALIAS)
@@ -75,4 +82,15 @@ def thumbnail(filename):
     return send_file(img_filename)
 
 if __name__ == "__main__":
-    app.run(debug=app.config['DEBUG'])
+    parser = OptionParser()
+    parser.add_option("--host", dest="host", action="store", type="str",
+                      default=None, help="The network host the app will use")
+    parser.add_option("--port", dest="port", action="store", type="int",
+                      default=None, help="The network port the app will use")
+    (options, args) = parser.parse_args()
+
+    # Set up logging
+    FORMAT = "%(name)s -- %(message)s"
+    logging.basicConfig(format=FORMAT, level=logging.DEBUG, stream=sys.stderr)
+
+    app.run(debug=app.config['DEBUG'], host=options.host, port=options.port)

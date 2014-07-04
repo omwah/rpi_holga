@@ -6,38 +6,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Raspberry Pi Holga</title>
 
-    <! -- blueimp Gallery -->
+    <!-- Bootstrap 3 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <!-- blueimp Gallery -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/blueimp-gallery.min.css') }}">
+    <!-- Custom css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pictures.css') }}">
 
   </head>
   <body>
-    <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
-    <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls">
-        <div class="slides"></div>
-        <h3 class="title"></h3>
-        <a class="prev">‹</a>
-        <a class="next">›</a>
-        <a class="close">×</a>
-        <a class="play-pause"></a>
-        <ol class="indicator"></ol>
-    </div>
+    <div class="container">
+        <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
+        <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls">
+            <div class="slides"></div>
+            <h3 class="title"></h3>
+            <a class="prev">‹</a>
+            <a class="next">›</a>
+            <a class="close">×</a>
+        </div>
 
-    <div id="links">
-        {% for pic in pictures %}
-            <a href="{{ pic.original }}" title="{{ pic.title }}" data-gallery>
-                <img class="lazy" data-original="{{ pic.thumbnail.src }}" alt="{{ pic.title }}" width="{{ pic.thumbnail.width }}" height="{{ pic.thumbnail.height }}"></a>
-        {% endfor %}
-    </div>
+        <div id="links">
+            <div class="row">
+            {% for pic in pictures %}
+                <div class="img-box col-xs-12 col-sm-6 col-md-3">
+                    <a href="{{ pic.original }}" title="{{ pic.title }}" data-gallery>
+                        <img class="lazy img-responsive img-thumbnail" data-original="{{ pic.thumbnail.src }}" alt="{{ pic.title }}" width="{{ pic.thumbnail.width }}" height="{{ pic.thumbnail.height }}"></a>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+    </div> <! -- end container -->
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <!-- jQuery -->
     <script src="{{ url_for('static', filename='js/jquery-2.1.1.min.js') }}"></script>
+    <!-- Bootstrap 3 -->
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     <! -- blueimp Gallery -->
     <script src="{{ url_for('static', filename='js/jquery.blueimp-gallery.min.js') }}"></script>
     <! -- Lazy Load for image loading -->
     <script src="{{ url_for('static', filename='js/jquery.lazyload.min.js') }}"></script>
     <script>
         $(function() {
-            $("img.lazy").lazyload();
+            $("img.lazy").lazyload({
+                threshold: 400
+            });
         });
     </script>
 
