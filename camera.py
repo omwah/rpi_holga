@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import atexit
 import signal
+import logging
 import subprocess
 from datetime import datetime
 
@@ -16,6 +18,8 @@ BUTTON_PIN = 7
 BEEP_PIN = 6
 
 ROTARY_SWITCH = { 3:1, 2:2, 0:3, 4:4, 5:5 }
+
+LOG_FORMAT = "%(asctime)s -- %(message)s"
 
 class HolgaCamera(object):
 
@@ -32,6 +36,8 @@ class HolgaCamera(object):
         
     # Make sure beep pin is off even when code is stopped mid beep
     def teardown(self):
+        logging.debug("Running teardown")
+        self.disable_camera()
         self.g.digitalWrite(BEEP_PIN, GPIO.LOW)
 
     def beep(self, duration=20):
@@ -44,25 +50,43 @@ class HolgaCamera(object):
             self.beep(20)
             self.g.delay(100)
 
+    def init_camera(self):
+        if not self.rpi_camera:
+            logging.debug("Initializing RPi Camera")
+            self.rpi_camera = picamera.PiCamera()
+            self.rpi_camera.resolution = RESOLUTION
+
+    def disable_camera(self):
+        if self.rpi_camera:
+            logging.debug("Disabling RPi Camera")
+            self.rpi_camera.close()
+            self.rpi_camera = None
+
     def capture_still(self):
-        with picamera.PiCamera() as camera:
-            camera.resolution = RESOLUTION
+        if self.rpi_camera:
             filename = datetime.strftime(datetime.now(), '%Y%m%dT%H%M%S%f.jpg')
-            camera.capture(os.path.join(OUTPUT_DIR, filename))
-        return filename
+            logging.debug("Begin capture")
+            self.beep(5)
+            self.rpi_camera.capture(os.path.join(OUTPUT_DIR, filename))
+            self.beep(5); self.g.delay(100); self.beep(10)
+            logging.debug("End capture")
+            logging.debug("Saving picture to: %s" % filename)
+            return filename
 
     def check_shutter_button(self):
         if self.g.digitalRead(BUTTON_PIN) == GPIO.LOW:
-            self.beep(5)
             filename = self.capture_still()
-            print('** Snap ** %s' % filename)
-            self.beep(5); self.g.delay(100); self.beep(10)
 
             while self.g.digitalRead(BUTTON_PIN) == GPIO.LOW:
                 self.g.delay(20)
 
     def rotary_action(self, new_pos):
-        print "Rotary pos:", new_pos
+        logging.debug("Rotary pos: %s" % new_pos)
+
+        if new_pos >= 2:
+            self.init_camera()
+        else:
+            self.disable_camera()
 
         if new_pos == 5:
             for _ in range(7):
@@ -80,10 +104,13 @@ if __name__ == '__main__':
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
+    # Set up logging
+    logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG, stream=sys.stderr)
+
     cam = HolgaCamera()
 
     cam.boot_ack()
-    print '** Camera Ready **'
+    logging.info('** Camera Ready **')
 
     while True:
         cam.check_shutter_button()
