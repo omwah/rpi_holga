@@ -2,8 +2,9 @@
 
 import os
 import atexit
-from datetime import datetime
+import signal
 import subprocess
+from datetime import datetime
 
 from wiringpi2 import *
 import picamera
@@ -27,6 +28,7 @@ class HolgaCamera(object):
         self.rpi_camera = None
 
         atexit.register(self.teardown)
+        signal.signal(signal.SIGTERM, self.teardown)
         
     # Make sure beep pin is off even when code is stopped mid beep
     def teardown(self):
