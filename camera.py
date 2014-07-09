@@ -40,15 +40,13 @@ class HolgaCamera(object):
         self.disable_camera()
         self.g.digitalWrite(BEEP_PIN, GPIO.LOW)
 
-    def beep(self, duration=20):
-        self.g.digitalWrite(BEEP_PIN, GPIO.HIGH)
-        self.g.delay(duration)
-        self.g.digitalWrite(BEEP_PIN, GPIO.LOW)
-
-    def boot_ack(self):
-        for _ in range(5):
-            self.beep(20)
-            self.g.delay(100)
+    def beep(self, duration=20, repeat=1, delay=100):
+        for _ in range(repeat):
+            self.g.digitalWrite(BEEP_PIN, GPIO.HIGH)
+            self.g.delay(duration)
+            self.g.digitalWrite(BEEP_PIN, GPIO.LOW)
+            if repeat > 1:
+                self.g.delay(delay)
 
     def init_camera(self):
         if not self.rpi_camera:
@@ -83,15 +81,14 @@ class HolgaCamera(object):
     def rotary_action(self, new_pos):
         logging.debug("Rotary pos: %s" % new_pos)
 
+        self.beep(duration=20, repeat=new_pos, delay=200)
+
         if new_pos >= 2:
             self.init_camera()
         else:
             self.disable_camera()
 
         if new_pos == 5:
-            for _ in range(7):
-                self.beep(20)
-                self.g.delay(200)
             subprocess.call(["shutdown", "-h", "now"])
 
     def check_rotary_switch(self):
@@ -109,7 +106,7 @@ if __name__ == '__main__':
 
     cam = HolgaCamera()
 
-    cam.boot_ack()
+    cam.beep(duration=20, repeat=5, delay=100)
     logging.info('** Camera Ready **')
 
     while True:
