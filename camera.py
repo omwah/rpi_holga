@@ -16,63 +16,76 @@ CHIRP_PIN = 6
 
 ROTARY_SWITCH = { 3:1, 2:2, 0:3, 4:4, 5:5 }
 
-if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
+class HolgaCamera(object):
 
-g = GPIO()
-camera = picamera.PiCamera()
-camera.resolution = RESOLUTION
+    def __init__(self):
+        self.g = GPIO()
+        self.g.pinMode(CHIRP_PIN, GPIO.OUTPUT)
 
-g.pinMode(CHIRP_PIN, GPIO.OUTPUT)
+        self.rotary_pos = 0
 
-def chirp(duration=20):
-    g.digitalWrite(CHIRP_PIN, GPIO.HIGH)
-    g.delay(duration)
-    g.digitalWrite(CHIRP_PIN, GPIO.LOW)
+        self.rpi_camera = None
 
-# Make sure chirp pin is off even when code is stopped mid chirp
-def teardown():
-    g.digitalWrite(CHIRP_PIN, GPIO.LOW)
-atexit.register(teardown)
+        atexit.register(self.teardown)
+        
+    # Make sure chirp pin is off even when code is stopped mid chirp
+    def teardown(self):
+        self.g.digitalWrite(CHIRP_PIN, GPIO.LOW)
 
-def boot_ack():
-    for _ in range(5):
-        chirp(20)
-        g.delay(100)
+    def chirp(self, duration=20):
+        self.g.digitalWrite(CHIRP_PIN, GPIO.HIGH)
+        self.g.delay(duration)
+        self.g.digitalWrite(CHIRP_PIN, GPIO.LOW)
 
-def capture_still():
-    filename = datetime.strftime(datetime.now(), '%Y%m%dT%H%M%S%f.jpg')
-    camera.capture(os.path.join(OUTPUT_DIR, filename))
-    return filename
+    def boot_ack(self):
+        for _ in range(5):
+            self.chirp(20)
+            self.g.delay(100)
 
-def rotary_action(new_pos):
-    print "Rotary pos:", new_pos
+    def capture_still(self):
+        with picamera.PiCamera() as camera:
+            camera.resolution = RESOLUTION
+            filename = datetime.strftime(datetime.now(), '%Y%m%dT%H%M%S%f.jpg')
+            camera.capture(os.path.join(OUTPUT_DIR, filename))
+        return filename
 
-    if new_pos == 5:
-        for _ in range(7):
-            chirp(20)
-            g.delay(200)
-        subprocess.call(["shutdown", "-h", "now"])
+    def check_shutter_button(self):
+        if self.g.digitalRead(BUTTON_PIN) == GPIO.LOW:
+            self.chirp(5)
+            filename = self.capture_still()
+            print('** Snap ** %s' % filename)
+            self.chirp(5); self.g.delay(100); self.chirp(10)
+
+            while self.g.digitalRead(BUTTON_PIN) == GPIO.LOW:
+                self.g.delay(20)
+
+    def rotary_action(self, new_pos):
+        print "Rotary pos:", new_pos
+
+        if new_pos == 5:
+            for _ in range(7):
+                self.chirp(20)
+                self.g.delay(200)
+            subprocess.call(["shutdown", "-h", "now"])
+
+    def check_rotary_switch(self):
+        for w_pin, r_pos in ROTARY_SWITCH.items():
+            if self.g.digitalRead(w_pin) == GPIO.LOW and r_pos != self.rotary_pos:
+                self.rotary_pos = r_pos
+                self.rotary_action(r_pos)
 
 if __name__ == '__main__':
-    boot_ack()
+    if not os.path.exists(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR)
+
+    cam = HolgaCamera()
+
+    cam.boot_ack()
     print '** Camera Ready **'
 
-    rotary_pos = 0
     while True:
-        if g.digitalRead(BUTTON_PIN) == GPIO.LOW:
-            chirp(5)
-            filename = capture_still()
-            print('** Snap ** %s' % filename)
-            chirp(5); g.delay(100); chirp(10)
-
-            while g.digitalRead(BUTTON_PIN) == GPIO.LOW:
-                g.delay(20)
-
-        for w_pin, r_pos in ROTARY_SWITCH.items():
-            if g.digitalRead(w_pin) == GPIO.LOW and r_pos != rotary_pos:
-                rotary_pos = r_pos
-                rotary_action(r_pos)
-     
+        cam.check_shutter_button()
+        cam.check_rotary_switch()
+    
         # Delay briefly so don't use 100% CPU
         delay(200)
