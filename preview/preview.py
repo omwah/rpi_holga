@@ -6,7 +6,8 @@ from collections import namedtuple
 from optparse import OptionParser
 
 from flask import Flask, url_for, render_template, send_file
-from PIL import Image, ImageOps
+
+from image import resize_image
 
 def configure_app(app):
     app.config.from_object('config.Config')
@@ -56,23 +57,6 @@ def index():
 def original(filename):
     orig_filename = os.path.join(app.config['IMAGES_ORIGINAL_DIR'], filename)
     return send_file(orig_filename)
-
-def resize_image(orig_filename, new_filename, size, fit=False):
-    if os.path.realpath(orig_filename) == os.path.realpath(new_filename):
-        raise IOException('Original and resized filename can not be the same: %s' % orig_filename)
-
-    if not os.path.exists(new_filename):
-        logging.debug("Generating (%s) image for %s" % (size, orig_filename))
-        im = Image.open(orig_filename)
-        if fit:
-            thumb = ImageOps.fit(im, size, Image.ANTIALIAS)
-            thumb.save(new_filename)
-        else:
-            im.thumbnail(size, Image.ANTIALIAS)
-            im.save(new_filename)
-        return True
-
-    return False
 
 @app.route('/thumbnail/<filename>')
 def thumbnail(filename):
