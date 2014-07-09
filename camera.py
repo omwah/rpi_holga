@@ -11,7 +11,8 @@ from datetime import datetime
 from wiringpi2 import *
 import picamera
 
-OUTPUT_DIR = '/home/pi/pictures'
+from preview.config import Config
+
 RESOLUTION = (2592, 1944)
 
 BUTTON_PIN = 7
@@ -62,10 +63,11 @@ class HolgaCamera(object):
 
     def capture_still(self):
         if self.rpi_camera:
-            filename = datetime.strftime(datetime.now(), '%Y%m%dT%H%M%S%f.jpg')
+            filebase = datetime.strftime(datetime.now(), '%Y%m%dT%H%M%S%f.jpg')
+            filename = os.path.join(Config.PICTURES_BASE_DIR, filebase)
             logging.debug("Begin capture")
             self.beep(5)
-            self.rpi_camera.capture(os.path.join(OUTPUT_DIR, filename))
+            self.rpi_camera.capture(filename)
             self.beep(5); self.g.delay(100); self.beep(10)
             logging.debug("End capture")
             logging.debug("Saving picture to: %s" % filename)
@@ -98,8 +100,8 @@ class HolgaCamera(object):
                 self.rotary_action(r_pos)
 
 if __name__ == '__main__':
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
+    if not os.path.exists(Config.PICTURES_BASE_DIR):
+        os.makedirs(Config.PICTURES_BASE_DIR)
 
     # Set up logging
     logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG, stream=sys.stderr)
