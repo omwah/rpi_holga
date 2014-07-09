@@ -12,7 +12,7 @@ OUTPUT_DIR = '/home/pi/pictures'
 RESOLUTION = (2592, 1944)
 
 BUTTON_PIN = 7
-CHIRP_PIN = 6
+BEEP_PIN = 6
 
 ROTARY_SWITCH = { 3:1, 2:2, 0:3, 4:4, 5:5 }
 
@@ -20,7 +20,7 @@ class HolgaCamera(object):
 
     def __init__(self):
         self.g = GPIO()
-        self.g.pinMode(CHIRP_PIN, GPIO.OUTPUT)
+        self.g.pinMode(BEEP_PIN, GPIO.OUTPUT)
 
         self.rotary_pos = 0
 
@@ -28,18 +28,18 @@ class HolgaCamera(object):
 
         atexit.register(self.teardown)
         
-    # Make sure chirp pin is off even when code is stopped mid chirp
+    # Make sure beep pin is off even when code is stopped mid beep
     def teardown(self):
-        self.g.digitalWrite(CHIRP_PIN, GPIO.LOW)
+        self.g.digitalWrite(BEEP_PIN, GPIO.LOW)
 
-    def chirp(self, duration=20):
-        self.g.digitalWrite(CHIRP_PIN, GPIO.HIGH)
+    def beep(self, duration=20):
+        self.g.digitalWrite(BEEP_PIN, GPIO.HIGH)
         self.g.delay(duration)
-        self.g.digitalWrite(CHIRP_PIN, GPIO.LOW)
+        self.g.digitalWrite(BEEP_PIN, GPIO.LOW)
 
     def boot_ack(self):
         for _ in range(5):
-            self.chirp(20)
+            self.beep(20)
             self.g.delay(100)
 
     def capture_still(self):
@@ -51,10 +51,10 @@ class HolgaCamera(object):
 
     def check_shutter_button(self):
         if self.g.digitalRead(BUTTON_PIN) == GPIO.LOW:
-            self.chirp(5)
+            self.beep(5)
             filename = self.capture_still()
             print('** Snap ** %s' % filename)
-            self.chirp(5); self.g.delay(100); self.chirp(10)
+            self.beep(5); self.g.delay(100); self.beep(10)
 
             while self.g.digitalRead(BUTTON_PIN) == GPIO.LOW:
                 self.g.delay(20)
@@ -64,7 +64,7 @@ class HolgaCamera(object):
 
         if new_pos == 5:
             for _ in range(7):
-                self.chirp(20)
+                self.beep(20)
                 self.g.delay(200)
             subprocess.call(["shutdown", "-h", "now"])
 
