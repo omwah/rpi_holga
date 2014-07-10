@@ -117,7 +117,7 @@ class HolgaCamera(object):
                 self.rotary_pos = r_pos
                 self.rotary_action(r_pos)
 
-def post_processor(post_proc_queue):
+def post_processor(post_proc_queue, cam):
     logging.info('Post processor ready')
     while True:
         orig_filename = post_proc_queue.get()
@@ -125,12 +125,15 @@ def post_processor(post_proc_queue):
 
         # Check if image is mostly blank, due to lens cap on
         # if so then move to blank directory
+        logging.debug("Analyzing if image is blank")
         hist = orig_img.histogram()
         per_blank = hist.count(0)/float(len(hist))
+        logging.debug("Image is %.2f%% blank" % (per_blank*100))
 
         if per_blank > MAX_BLANK_AMOUNT:
             logging.debug("Image is blank, moving to blank directory: %s" % orig_filename)
             shutil.move(orig_filename, Config.IMAGES_BLANK_DIR)
+            cam.beep(duration=5, repeat=5, delay=15)
         else:
             tn_filename = os.path.join(Config.IMAGES_THUMBNAIL_DIR, os.path.basename(orig_filename))
             resize_image(orig_img, tn_filename, Config.IMAGES_THUMBNAIL_SIZE, fit=True)
@@ -144,10 +147,11 @@ if __name__ == '__main__':
 
     # Create a seperate thread to post process images, such as thumbnails
     post_proc_queue = Queue()
-    post_processing = Process(target=post_processor, args=(post_proc_queue,))
-    post_processing.start()
 
     cam = HolgaCamera(post_proc_queue)
+
+    post_processing = Process(target=post_processor, args=(post_proc_queue,cam))
+    post_processing.start()
 
     cam.beep(duration=20, repeat=5, delay=100)
     logging.info('RPi Holga Camera Ready')
