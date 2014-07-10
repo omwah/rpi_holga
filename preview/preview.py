@@ -74,7 +74,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     # Set up logging
-    FORMAT = "%(name)s -- %(message)s"
+    FORMAT = "%(asctime)s -- %(message)s"
     logging.basicConfig(format=FORMAT, level=logging.DEBUG, stream=sys.stderr)
 
     app.run(debug=app.config['DEBUG'], host=options.host, port=options.port)

@@ -3,7 +3,7 @@ import logging
 
 from PIL import Image, ImageOps
 
-def resize_image(orig_img, new_filename, size, fit=False):
+def resize_image(orig_img, new_filename, size, fit=False, filter=Image.BICUBIC):
     if Image.isImageType(orig_img):
         orig_filename = orig_img.filename
     else:
@@ -18,10 +18,10 @@ def resize_image(orig_img, new_filename, size, fit=False):
             orig_img = Image.open(orig_filename)
 
         if fit:
-            thumb = ImageOps.fit(orig_img, size, Image.ANTIALIAS)
+            thumb = ImageOps.fit(orig_img, size, filter)
             thumb.save(new_filename)
         else:
-            orig_img.thumbnail(size, Image.ANTIALIAS)
+            orig_img.thumbnail(size, filter)
             orig_img.save(new_filename)
 
         logging.debug("Resizing complete")
