@@ -121,22 +121,26 @@ def post_processor(post_proc_queue, cam):
     logging.info('Post processor ready')
     while True:
         orig_filename = post_proc_queue.get()
-        orig_img = Image.open(orig_filename)
+
+        # Resize image first since that is fast and cheaper to analyze using PIL
+        tn_filename = os.path.join(Config.IMAGES_THUMBNAIL_DIR, os.path.basename(orig_filename))
+        resize_image(orig_filename, tn_filename, Config.IMAGES_THUMBNAIL_SIZE)
 
         # Check if image is mostly blank, due to lens cap on
-        # if so then move to blank directory
+        # if so then move to blank directory and remove thumbnail
         logging.debug("Analyzing if image is blank")
-        hist = orig_img.histogram()
+
+        tn_img = Image.open(tn_filename)
+        hist = tn_img.histogram()
         per_blank = hist.count(0)/float(len(hist))
+
         logging.debug("Image is %.2f%% blank" % (per_blank*100))
 
         if per_blank > MAX_BLANK_AMOUNT:
             logging.debug("Image is blank, moving to blank directory: %s" % orig_filename)
-            shutil.move(orig_filename, Config.IMAGES_BLANK_DIR)
             cam.beep(duration=5, repeat=5, delay=15)
-        else:
-            tn_filename = os.path.join(Config.IMAGES_THUMBNAIL_DIR, os.path.basename(orig_filename))
-            resize_image(orig_filename, tn_filename, Config.IMAGES_THUMBNAIL_SIZE)
+            shutil.move(orig_filename, Config.IMAGES_BLANK_DIR)
+            os.remove(tn_filename)
 
 if __name__ == '__main__':
     if not os.path.exists(Config.IMAGES_ORIGINAL_DIR):
