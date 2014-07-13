@@ -46,7 +46,7 @@
     <! -- Lazy Load for image loading -->
     <script src="{{ url_for('static', filename='js/jquery.lazyload.min.js') }}"></script>
     <script>
-        blueimp.Gallery.prototype.options.preloadRange = 0;
+        blueimp.Gallery.prototype.options.preloadRange = 1;
         $(function() {
             $("img.lazy").lazyload({
                 threshold: 400

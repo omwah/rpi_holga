@@ -74,7 +74,7 @@ class HolgaCamera(object):
     def capture_still(self):
         if self.rpi_camera:
             filebase = datetime.strftime(datetime.now(), '%Y%m%dT%H%M%S%f.jpg')
-            filename = os.path.join(Config.PICTURES_BASE_DIR, filebase)
+            filename = os.path.join(Config.IMAGES_ORIGINAL_DIR, filebase)
 
             # Beep before and after capture so user has a indication
             # on how long the image is taking to take. This can keep
@@ -136,11 +136,11 @@ def post_processor(post_proc_queue, cam):
             cam.beep(duration=5, repeat=5, delay=15)
         else:
             tn_filename = os.path.join(Config.IMAGES_THUMBNAIL_DIR, os.path.basename(orig_filename))
-            resize_image(orig_img, tn_filename, Config.IMAGES_THUMBNAIL_SIZE, fit=True)
+            resize_image(orig_filename, tn_filename, Config.IMAGES_THUMBNAIL_SIZE)
 
 if __name__ == '__main__':
-    if not os.path.exists(Config.PICTURES_BASE_DIR):
-        os.makedirs(Config.PICTURES_BASE_DIR)
+    if not os.path.exists(Config.IMAGES_ORIGINAL_DIR):
+        os.makedirs(Config.IMAGES_ORIGINAL_DIR)
 
     # Set up logging
     logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG, stream=sys.stderr)

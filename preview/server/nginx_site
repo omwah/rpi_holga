@@ -10,9 +10,15 @@ server {
 	location / { try_files $uri @rpi_holga; }
 
 	# Serve original files w/o going through flask
+	location /pictures {
+	    autoindex on;
+            alias /home/pi/pictures;
+	}
+
+	# Serve original files w/o going through flask
 	location /original {
 	    autoindex on;
-            alias /home/pi/pictures/;
+            alias /home/pi/pictures/original;
 	}
 
 	# Serve static files w/o going through flask

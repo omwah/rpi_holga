@@ -2,8 +2,9 @@ import os
 import logging
 
 from PIL import Image, ImageOps
+from jpegtran import JPEGImage
 
-def resize_image(orig_img, new_filename, size, fit=False, filter=Image.BICUBIC):
+def resize_image_pil(orig_img, new_filename, size, fit=False, filter=Image.BICUBIC):
     if Image.isImageType(orig_img):
         orig_filename = orig_img.filename
     else:
@@ -25,6 +26,20 @@ def resize_image(orig_img, new_filename, size, fit=False, filter=Image.BICUBIC):
             orig_img.save(new_filename)
 
         logging.debug("Resizing complete")
+        return True
+
+    return False
+
+def resize_image(orig_filename, new_filename, size):
+    if os.path.realpath(orig_filename) == os.path.realpath(new_filename):
+        raise IOException('Original and resized filename can not be the same: %s' % orig_filename)
+
+    if not os.path.exists(new_filename):
+        logging.debug("Generating %s image for %s" % (size, orig_filename))
+        orig_img = JPEGImage(orig_filename)
+        orig_img.downscale(*size).save(new_filename)
+        logging.debug("Resizing complete")
+
         return True
 
     return False

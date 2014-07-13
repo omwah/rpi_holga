@@ -62,7 +62,7 @@ def original(filename):
 def thumbnail(filename):
     orig_filename = os.path.join(app.config['IMAGES_ORIGINAL_DIR'], filename)
     img_filename = os.path.join(app.config['IMAGES_THUMBNAIL_DIR'], filename)
-    resize_image(orig_filename, img_filename, app.config['IMAGES_THUMBNAIL_SIZE'], fit=True)
+    resize_image(orig_filename, img_filename, app.config['IMAGES_THUMBNAIL_SIZE'])
     return send_file(img_filename)
 
 if __name__ == "__main__":
