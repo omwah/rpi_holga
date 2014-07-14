@@ -17,7 +17,7 @@
   <body>
     <div class="container">
         <!-- The Gallery as lightbox dialog, should be a child element of the document body -->
-        <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls">
+        <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls" data-preload-range="1">
             <div class="slides"></div>
             <h3 class="title"></h3>
             <a class="prev">‹</a>
@@ -35,24 +35,18 @@
             {% endfor %}
             </div>
         </div>
-    </div> <! -- end container -->
+    </div> <!-- end container -->
 
     <!-- jQuery -->
     <script src="{{ url_for('static', filename='js/jquery-2.1.1.min.js') }}"></script>
     <!-- Bootstrap 3 -->
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-    <! -- blueimp Gallery -->
+    <!-- blueimp Gallery -->
     <script src="{{ url_for('static', filename='js/jquery.blueimp-gallery.min.js') }}"></script>
-    <! -- Lazy Load for image loading -->
+    <!-- Lazy Load for image loading -->
     <script src="{{ url_for('static', filename='js/jquery.lazyload.min.js') }}"></script>
-    <script>
-        blueimp.Gallery.prototype.options.preloadRange = 1;
-        $(function() {
-            $("img.lazy").lazyload({
-                threshold: 400
-            });
-        });
-    </script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/pictures.js') }}"></script>
 
     </body>
 </html>
