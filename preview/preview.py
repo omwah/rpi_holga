@@ -1,6 +1,5 @@
 import os
 import sys
-import dircache
 import logging
 from collections import namedtuple
 from optparse import OptionParser
@@ -22,6 +21,8 @@ app = Flask(__name__)
 configure_app(app)
 make_image_dirs(app)
 
+TnInfo = namedtuple('TnInfo', ['src', 'width', 'height'])
+
 class CameraPicture(object):
     def __init__(self, filename):
         self.filename = filename
@@ -34,14 +35,13 @@ class CameraPicture(object):
 
     @property
     def thumbnail(self):
-        TnInfo = namedtuple('TnInfo', ['src', 'width', 'height'])
         src = url_for('thumbnail', filename=self.basename)
         width = app.config['IMAGES_THUMBNAIL_SIZE'][0]
         height = app.config['IMAGES_THUMBNAIL_SIZE'][1]
         return TnInfo(src, width, height)
 
 def image_filenames():
-    img_fns = sorted(dircache.listdir(app.config['IMAGES_ORIGINAL_DIR']), reverse=True)
+    img_fns = sorted(os.listdir(app.config['IMAGES_ORIGINAL_DIR']), reverse=True)
     return img_fns
 
 @app.route('/')
