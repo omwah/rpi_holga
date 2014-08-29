@@ -26,7 +26,8 @@ MAX_BLANK_AMOUNT = 0.89
 BUTTON_PIN = 7
 BEEP_PIN = 6
 
-ROTARY_SWITCH = { 3:1, 2:2, 0:3, 4:4, 5:5 }
+# Maps a wiringPi GPIO pin to a rotary switch position
+ROTARY_SWITCH = { 4:1, 2:2, 3:3, 0:4, 1:5 }
 
 LOG_FORMAT = '%(asctime)s -- %(message)s'
 
