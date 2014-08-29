@@ -41,7 +41,9 @@ ROTARY_SETTINGS = { 3: { 'framerate': Fraction(1, 6), # low light
                          'ISO': 800, },
                   }
 
+SCREEN_FORMAT = '%(asctime)s -- %(message)s'
 LOG_FORMAT = '%(asctime)s -- %(message)s'
+LOG_FILENAME = '/home/pi/logs/rpi_camera.log'
 
 class HolgaCamera(object):
 
@@ -175,12 +177,40 @@ def post_processor(post_proc_queue, cam):
             shutil.move(orig_filename, Config.IMAGES_BLANK_DIR)
             os.remove(tn_filename)
 
+def init_logging(verbose=False, log_file=None):
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    if verbose:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+       
+    # Start up console handler
+    console = logging.StreamHandler()
+    console.setLevel(level)
+    console.setFormatter(logging.Formatter(fmt=SCREEN_FORMAT))
+
+    logger.addHandler(console)
+    
+    # Log to a file if the option is supplied
+    if log_file:
+        log_dir = os.path.dirname(log_file)
+        if len(log_dir) > 0 and not os.path.exists(log_dir):
+            os.makedirs(os.path.dirname(log_file))
+
+        logger = logging.getLogger()
+        fileout = logging.FileHandler(log_file, "w")
+        fileout.setLevel(logging.DEBUG)
+        fileout.setFormatter(logging.Formatter(fmt=LOG_FORMAT))
+        logger.addHandler(fileout)
+
 if __name__ == '__main__':
     if not os.path.exists(Config.IMAGES_ORIGINAL_DIR):
         os.makedirs(Config.IMAGES_ORIGINAL_DIR)
 
     # Set up logging
-    logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG, stream=sys.stderr)
+    init_logging(verbose=True, log_file=LOG_FILENAME)
 
     # Create a seperate thread to post process images, such as thumbnails
     post_proc_queue = Queue()
