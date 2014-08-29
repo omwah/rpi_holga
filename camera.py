@@ -8,6 +8,7 @@ import signal
 import logging
 import subprocess
 from datetime import datetime
+from fractions import Fraction
 from multiprocessing import Process, Queue
 
 from wiringpi2 import *
@@ -16,8 +17,6 @@ import picamera
 
 from preview.config import Config
 from preview.image import resize_image
-
-RESOLUTION = (2592, 1944)
 
 # Ratio of how much of image can be blank before moving to a seperate
 # blank directory
@@ -28,6 +27,19 @@ BEEP_PIN = 6
 
 # Maps a wiringPi GPIO pin to a rotary switch position
 ROTARY_SWITCH = { 4:1, 2:2, 3:3, 0:4, 1:5 }
+
+# Changes camera settings depending on rotary switch position
+DEFAULT_SETTINGS = { 'framerate': Fraction(30, 1), 
+                     'shutter_speed': 0, 
+                     'exposure_mode': 'auto', 
+                     'ISO': 0,
+                     'resolution': (2592, 1944),
+                    } # defaults
+ROTARY_SETTINGS = { 3: { 'framerate': Fraction(1, 6), # low light
+                         'shutter_speed': 6000000, 
+                         'exposure_mode': 'off', 
+                         'ISO': 800, },
+                  }
 
 LOG_FORMAT = '%(asctime)s -- %(message)s'
 
@@ -64,7 +76,26 @@ class HolgaCamera(object):
         if not self.rpi_camera:
             logging.debug('Initializing RPi Camera')
             self.rpi_camera = picamera.PiCamera()
-            self.rpi_camera.resolution = RESOLUTION
+
+    def set_camera_attributes(self, attrs):
+        if not self.rpi_camera:
+            logging.error('Camera is not initialized, can not set attributes')
+            return
+
+        logging.debug('Setting camera attributes:')
+        for attr_name, attr_val in attrs.items():
+            if not hasattr(self.rpi_camera, attr_name):
+                logging.error('Camera has no attribute: %s' % attr_name)
+                continue
+            logging.debug('\t%s = %s' % (attr_name, attr_val))
+            setattr(self.rpi_camera, attr_name, attr_val)
+
+    def apply_settings(self, rotary_pos=None):
+        # First apply defaults
+        cam_settings = DEFAULT_SETTINGS.copy()
+        if rotary_pos and ROTARY_SETTINGS.has_key(rotary_pos):
+            cam_settings.update(ROTARY_SETTINGS[rotary_pos])
+        self.set_camera_attributes(cam_settings)
 
     def disable_camera(self):
         if self.rpi_camera:
@@ -106,6 +137,7 @@ class HolgaCamera(object):
 
         if new_pos >= 2:
             self.init_camera()
+            self.apply_settings(new_pos)
         else:
             self.disable_camera()
 
